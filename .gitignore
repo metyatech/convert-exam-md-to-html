@@ -1,0 +1,9 @@
+# Output
+dist/
+out/
+examples/*.html
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/

@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate HTML
+        shell: pwsh
+        run: |
+          pwsh -File ./convert-exam-md-to-html.ps1 `
+            -InputMd ./examples/sample.md `
+            -OutputHtml ./dist/sample.html `
+            -Subtitle "CI"
+
+      - name: Smoke test output
+        shell: pwsh
+        run: |
+          if (-not (Test-Path ./dist/sample.html)) { throw "dist/sample.html not found" }
+          $html = Get-Content -Raw ./dist/sample.html
+          if (($html | Select-String -Pattern 'class=\"question-card\"' -AllMatches).Matches.Count -lt 2) { throw "question-card count too small" }
+          if (($html | Select-String -Pattern 'class=\"nav-item' -AllMatches).Matches.Count -lt 2) { throw "nav-item count too small" }
+          if (($html | Select-String -Pattern 'answer-toggle' -AllMatches).Matches.Count -lt 2) { throw "answer-toggle count too small" }
