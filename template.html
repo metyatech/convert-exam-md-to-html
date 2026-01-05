@@ -248,13 +248,16 @@
         .answer-content {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.5s ease, margin-top 0.3s ease;
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: max-height 0.25s ease, opacity 0.2s ease, transform 0.2s ease, margin-top 0.2s ease;
             margin-top: 0;
         }
 
         .answer-toggle:checked+.answer-label+.answer-content {
-            max-height: 10000px;
-            margin-top: 20px;
+            margin-top: 16px;
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .answer-content h4 {
@@ -495,6 +498,32 @@
         window.addEventListener('scroll', updateActiveNav);
         window.addEventListener('resize', updateActiveNav);
         window.addEventListener('load', updateActiveNav);
+
+        const initAnswerToggles = () => {
+            const toggles = document.querySelectorAll('.answer-toggle');
+            if (!toggles.length) return;
+
+            const updateToggleHeight = (toggle) => {
+                const content = toggle.nextElementSibling?.nextElementSibling;
+                if (!content) return;
+                if (toggle.checked) {
+                    content.style.maxHeight = `${content.scrollHeight}px`;
+                } else {
+                    content.style.maxHeight = '0px';
+                }
+            };
+
+            toggles.forEach((toggle) => {
+                updateToggleHeight(toggle);
+                toggle.addEventListener('change', () => updateToggleHeight(toggle));
+            });
+
+            window.addEventListener('resize', () => {
+                toggles.forEach((toggle) => updateToggleHeight(toggle));
+            });
+        };
+
+        window.addEventListener('load', initAnswerToggles);
     </script>
 </body>
 
