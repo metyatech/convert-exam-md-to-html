@@ -19,7 +19,7 @@
             line-height: 1.8;
             color: #333;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            padding: 20px 0;
         }
 
         .container {
@@ -91,7 +91,7 @@
         .code-block {
             background: #2d3748;
             border-radius: 10px;
-            padding: 20px;
+            padding: 20px 0;
             margin: 20px 0;
             overflow-x: auto;
             position: relative;
@@ -120,6 +120,9 @@
 
         .code-block code {
             font-family: 'Courier New', monospace;
+            background: transparent;
+            padding: 0;
+            color: inherit;
         }
 
         ol,
@@ -256,6 +259,12 @@
             font-size: 0.85em;
             line-height: 1.6;
             white-space: pre-wrap;
+        }
+
+        .code-example code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
         }
 
         .tip-list {
