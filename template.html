@@ -330,17 +330,59 @@
             margin: 15px 0;
         }
 
+        .blank-wrap {
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            margin: 0 5px;
+        }
+
         .blank {
-            display: inline-block;
             width: 120px;
             padding: 4px 8px;
             border: 2px solid #667eea;
             border-radius: 6px;
             background: #fff;
             color: #333;
-            margin: 0 5px;
             height: 1.9em;
             vertical-align: middle;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .blank-badge {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            background: #667eea;
+            color: white;
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .blank-tag {
+            display: inline-flex;
+            align-items: center;
+            background: #667eea;
+            color: white;
+            border-radius: 999px;
+            padding: 1px 8px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 6px;
+            white-space: nowrap;
+        }
+
+        .blank-wrap.blank-highlight .blank {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        }
+
+        .blank-tag.blank-highlight {
+            background: #f59e0b;
         }
 
         .navigation {
@@ -470,9 +512,10 @@
             });
         });
 
-        const replaceBlankPlaceholders = () => {
-            const placeholder = '__BLANK__';
-            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        const placeholder = '__BLANK__';
+
+        const replacePlaceholdersInElement = (root, createNode) => {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
             const nodes = [];
 
             while (walker.nextNode()) {
@@ -490,15 +533,91 @@
                 parts.forEach((part, index) => {
                     if (part) fragment.appendChild(document.createTextNode(part));
                     if (index < parts.length - 1) {
-                        const input = document.createElement('input');
-                        input.type = 'text';
-                        input.className = 'blank';
-                        input.setAttribute('aria-label', '穴埋め入力');
-                        fragment.appendChild(input);
+                        fragment.appendChild(createNode());
                     }
                 });
 
                 node.parentNode.replaceChild(fragment, node);
+            });
+        };
+
+        const createBlankInput = (index) => {
+            const wrap = document.createElement('span');
+            wrap.className = 'blank-wrap';
+            wrap.dataset.blankIndex = String(index);
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'blank';
+            input.dataset.blankIndex = String(index);
+            input.setAttribute('aria-label', `空欄${index}`);
+
+            const badge = document.createElement('span');
+            badge.className = 'blank-badge';
+            badge.textContent = String(index);
+
+            wrap.appendChild(input);
+            wrap.appendChild(badge);
+
+            return wrap;
+        };
+
+        const createBlankTag = (index) => {
+            const tag = document.createElement('span');
+            tag.className = 'blank-tag';
+            tag.dataset.blankIndex = String(index);
+            tag.textContent = `空欄${index}`;
+            return tag;
+        };
+
+        const bindBlankHighlights = (card) => {
+            const setHighlight = (index, state) => {
+                const targets = card.querySelectorAll(`[data-blank-index="${index}"]`);
+                targets.forEach((target) => {
+                    if (target.classList.contains('blank-wrap')) {
+                        target.classList.toggle('blank-highlight', state);
+                    }
+                    if (target.classList.contains('blank-tag')) {
+                        target.classList.toggle('blank-highlight', state);
+                    }
+                });
+            };
+
+            card.querySelectorAll('.blank').forEach((input) => {
+                const index = input.dataset.blankIndex;
+                if (!index) return;
+                input.addEventListener('focus', () => setHighlight(index, true));
+                input.addEventListener('blur', () => setHighlight(index, false));
+            });
+
+            card.querySelectorAll('.blank-tag').forEach((tag) => {
+                const index = tag.dataset.blankIndex;
+                if (!index) return;
+                tag.addEventListener('mouseenter', () => setHighlight(index, true));
+                tag.addEventListener('mouseleave', () => setHighlight(index, false));
+            });
+        };
+
+        const replaceBlankPlaceholders = () => {
+            const cards = document.querySelectorAll('.question-card');
+
+            cards.forEach((card) => {
+                let blankIndex = 1;
+                const sections = Array.from(card.children).filter(
+                    (element) => !element.classList.contains('answer-section')
+                );
+
+                sections.forEach((section) => {
+                    replacePlaceholdersInElement(section, () => createBlankInput(blankIndex++));
+                });
+
+                const answerSection = card.querySelector('.answer-section');
+                if (answerSection) {
+                    let answerIndex = 1;
+                    replacePlaceholdersInElement(answerSection, () => createBlankTag(answerIndex++));
+                }
+
+                bindBlankHighlights(card);
             });
         };
 
