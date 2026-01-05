@@ -215,16 +215,40 @@
             font-weight: bold;
             transition: background 0.3s ease;
             user-select: none;
+            position: relative;
+            padding-right: 42px;
+            box-shadow: 0 6px 14px rgba(34, 197, 94, 0.25);
         }
 
         .answer-label:hover {
             background: #16a34a;
         }
 
+        .answer-label::after {
+            content: "";
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            transform: translateY(-50%) rotate(45deg);
+            transition: transform 0.3s ease;
+        }
+
+        .answer-toggle:checked + .answer-label {
+            background: #16a34a;
+        }
+
+        .answer-toggle:checked + .answer-label::after {
+            transform: translateY(-50%) rotate(-135deg);
+        }
+
         .answer-content {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.5s ease;
+            transition: max-height 0.5s ease, margin-top 0.3s ease;
             margin-top: 0;
         }
 
