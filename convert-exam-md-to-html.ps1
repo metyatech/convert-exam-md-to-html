@@ -58,7 +58,7 @@ function Split-ByH2([string]$markdown) {
       if ($null -ne $currentHeading) {
         $sections += [pscustomobject]@{
           Heading = $currentHeading
-          Body = ($currentLines -join "`n").Trim()
+          Body    = ($currentLines -join "`n").Trim()
         }
       }
 
@@ -75,7 +75,7 @@ function Split-ByH2([string]$markdown) {
   if ($null -ne $currentHeading) {
     $sections += [pscustomobject]@{
       Heading = $currentHeading
-      Body = ($currentLines -join "`n").Trim()
+      Body    = ($currentLines -join "`n").Trim()
     }
   }
 
@@ -88,7 +88,7 @@ function Get-QuestionMeta([string]$h2Heading) {
 
   return [pscustomobject]@{
     Number = [int]$match.Groups[1].Value
-    Title = $match.Groups[2].Value.Trim()
+    Title  = $match.Groups[2].Value.Trim()
   }
 }
 
@@ -158,11 +158,11 @@ function Split-QuestionBody([string]$body) {
   }
 
   return [pscustomobject]@{
-    Statement = $statement
-    Tip = $tip
+    Statement    = $statement
+    Tip          = $tip
     ScoringTitle = $scoringTitle
-    ScoringBody = $scoringBody
-    AnswerBody = $answerBody
+    ScoringBody  = $scoringBody
+    AnswerBody   = $answerBody
   }
 }
 
@@ -194,11 +194,11 @@ function Normalize-CodeLanguages([string]$html) {
 function Wrap-CodeBlocks([string]$html, [string]$wrapperClass) {
   $pattern = '(?s)<pre><code( class="[^"]+")?>(.*?)</code></pre>'
   return [regex]::Replace($html, $pattern, {
-    param($m)
-    $cls = $m.Groups[1].Value
-    $code = $m.Groups[2].Value
-    return ('<div class="{0}"><pre><code{1}>{2}</code></pre></div>' -f $wrapperClass, $cls, $code)
-  })
+      param($m)
+      $cls = $m.Groups[1].Value
+      $code = $m.Groups[2].Value
+      return ('<div class="{0}"><pre><code{1}>{2}</code></pre></div>' -f $wrapperClass, $cls, $code)
+    })
 }
 
 function Replace-Blanks([string]$html) {
@@ -293,7 +293,8 @@ if ([string]::IsNullOrWhiteSpace($OutputHtml)) {
 
 $templatePath = if ([string]::IsNullOrWhiteSpace($TemplateHtml)) {
   Join-Path $PSScriptRoot 'template.html'
-} else {
+}
+else {
   (Resolve-Path -Path $TemplateHtml).Path
 }
 if (-not (Test-Path $templatePath)) { throw "テンプレートが見つかりません: $templatePath" }
