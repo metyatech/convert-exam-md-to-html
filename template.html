@@ -416,18 +416,35 @@
         });
 
         // Update active navigation item on scroll
-        window.addEventListener('scroll', () => {
+        const updateActiveNav = () => {
             const questions = document.querySelectorAll('.question-card');
             const navItems = document.querySelectorAll('.nav-item');
+            if (!questions.length || !navItems.length) return;
+
+            const offset = 120;
+            const scrollY = window.scrollY;
+            const viewportHeight = window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            let activeIndex = 0;
 
             questions.forEach((question, index) => {
-                const rect = question.getBoundingClientRect();
-                if (rect.top <= 100 && rect.bottom >= 100) {
-                    navItems.forEach(item => item.classList.remove('active'));
-                    if (navItems[index]) navItems[index].classList.add('active');
+                const top = question.getBoundingClientRect().top + scrollY;
+                if (top <= scrollY + offset) {
+                    activeIndex = index;
                 }
             });
-        });
+
+            if (scrollY + viewportHeight >= docHeight - 10) {
+                activeIndex = questions.length - 1;
+            }
+
+            navItems.forEach(item => item.classList.remove('active'));
+            if (navItems[activeIndex]) navItems[activeIndex].classList.add('active');
+        };
+
+        window.addEventListener('scroll', updateActiveNav);
+        window.addEventListener('resize', updateActiveNav);
+        window.addEventListener('load', updateActiveNav);
     </script>
 </body>
 
