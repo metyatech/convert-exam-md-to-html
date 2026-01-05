@@ -7,7 +7,7 @@
   `template.html` に差し込んで1つのHTMLファイルとして出力します。
 
   - `## 問題N：...` を問題カードとして扱います。
-  - `${...}` は空欄（下線）表示に置換します。
+  - `${...}` は入力欄に置換します（出力HTML内でプレースホルダーを入力欄に変換）。
 
 .PARAMETER InputMd
   入力Markdownファイルのパス。
@@ -202,7 +202,7 @@ function Wrap-CodeBlocks([string]$html, [string]$wrapperClass) {
 }
 
 function Replace-Blanks([string]$html) {
-  return [regex]::Replace($html, '\$\{[^}]*\}', '<span class="blank"></span>')
+  return [regex]::Replace($html, '\$\{[^}]*\}', '__BLANK__')
 }
 
 function Strongify-Labels([string]$html) {
@@ -334,4 +334,3 @@ if (-not [string]::IsNullOrWhiteSpace($outDir)) {
 
 Set-Content -Path $OutputHtml -Value $html -Encoding UTF8
 Write-Host "出力しました: $OutputHtml"
-

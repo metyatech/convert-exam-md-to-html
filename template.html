@@ -332,10 +332,15 @@
 
         .blank {
             display: inline-block;
-            width: 60px;
-            border-bottom: 2px solid #667eea;
+            width: 120px;
+            padding: 4px 8px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            background: #fff;
+            color: #333;
             margin: 0 5px;
-            height: 1.2em;
+            height: 1.9em;
+            vertical-align: middle;
         }
 
         .navigation {
@@ -465,6 +470,38 @@
             });
         });
 
+        const replaceBlankPlaceholders = () => {
+            const placeholder = '__BLANK__';
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+
+            while (walker.nextNode()) {
+                const node = walker.currentNode;
+                if (node.nodeValue.includes(placeholder)) {
+                    nodes.push(node);
+                }
+            }
+
+            nodes.forEach((node) => {
+                const parts = node.nodeValue.split(placeholder);
+                if (parts.length <= 1) return;
+
+                const fragment = document.createDocumentFragment();
+                parts.forEach((part, index) => {
+                    if (part) fragment.appendChild(document.createTextNode(part));
+                    if (index < parts.length - 1) {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'blank';
+                        input.setAttribute('aria-label', '穴埋め入力');
+                        fragment.appendChild(input);
+                    }
+                });
+
+                node.parentNode.replaceChild(fragment, node);
+            });
+        };
+
         // Update active navigation item on scroll
         const updateActiveNav = () => {
             const questions = document.querySelectorAll('.question-card');
@@ -497,7 +534,6 @@
 
         window.addEventListener('scroll', updateActiveNav);
         window.addEventListener('resize', updateActiveNav);
-        window.addEventListener('load', updateActiveNav);
 
         const initAnswerToggles = () => {
             const toggles = document.querySelectorAll('.answer-toggle');
@@ -523,7 +559,11 @@
             });
         };
 
-        window.addEventListener('load', initAnswerToggles);
+        window.addEventListener('load', () => {
+            replaceBlankPlaceholders();
+            updateActiveNav();
+            initAnswerToggles();
+        });
     </script>
 </body>
 

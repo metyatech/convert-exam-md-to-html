@@ -7,7 +7,7 @@ PowerShell 標準の `ConvertFrom-Markdown` を使って、Markdown を「問題
 - 依存なし（PowerShell 7+ のみ）
 - 入力はMarkdownなので修正が簡単
 - デザインは `template.html` を編集するだけで変更可能
-- `${...}` を空欄（下線）表示に置換可能
+- `${...}` を穴埋め用の入力欄に置換可能（出力HTML内で入力欄に変換）
 
 ## 必要なもの
 
