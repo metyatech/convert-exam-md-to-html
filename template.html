@@ -421,20 +421,23 @@
             const navItems = document.querySelectorAll('.nav-item');
             if (!questions.length || !navItems.length) return;
 
-            const offset = 120;
-            const scrollY = window.scrollY;
-            const viewportHeight = window.innerHeight;
-            const docHeight = document.documentElement.scrollHeight;
+            const viewportCenter = window.innerHeight / 2;
             let activeIndex = 0;
+            let minDistance = Number.POSITIVE_INFINITY;
 
             questions.forEach((question, index) => {
-                const top = question.getBoundingClientRect().top + scrollY;
-                if (top <= scrollY + offset) {
+                const rect = question.getBoundingClientRect();
+                const cardCenter = rect.top + rect.height / 2;
+                const distance = Math.abs(cardCenter - viewportCenter);
+                if (distance < minDistance) {
+                    minDistance = distance;
                     activeIndex = index;
                 }
             });
 
-            if (scrollY + viewportHeight >= docHeight - 10) {
+            const scrollBottom = window.scrollY + window.innerHeight;
+            const docHeight = document.documentElement.scrollHeight;
+            if (scrollBottom >= docHeight - 10) {
                 activeIndex = questions.length - 1;
             }
 
