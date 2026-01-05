@@ -362,17 +362,37 @@
         }
 
         @media (min-width: 1250px) {
+            .container {
+                max-width: 1040px;
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 120px;
+                column-gap: 20px;
+                align-items: start;
+            }
+
+            header {
+                grid-column: 1 / -1;
+            }
+
             .navigation {
-                position: fixed;
-                right: 20px;
+                position: sticky;
                 top: 120px;
                 width: 120px;
                 flex-direction: column;
                 align-items: stretch;
+                justify-content: flex-start;
                 margin-bottom: 0;
                 z-index: 10;
                 max-height: calc(100vh - 140px);
                 overflow-y: auto;
+                grid-column: 2;
+                align-self: start;
+                grid-row: 2;
+            }
+
+            .question-list {
+                grid-column: 1;
+                grid-row: 2;
             }
 
             .nav-item {
@@ -420,7 +440,9 @@
             {{NAV_ITEMS}}
         </div>
 
-        {{QUESTION_CARDS}}
+        <div class="question-list">
+            {{QUESTION_CARDS}}
+        </div>
     </div>
 
     <!-- Prism.js for syntax highlighting -->
