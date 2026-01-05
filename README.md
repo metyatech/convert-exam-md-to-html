@@ -36,7 +36,41 @@ pwsh -File .\convert-exam-md-to-html.ps1 `
 
 ## デザイン（template）
 
-- 見た目は `template.html` の CSS と HTML を編集して調整します。
+変換後HTMLの見た目は `template.html` で決まります。ここを編集することで、色・余白・フォントなどを自由に変更できます。
+
+### 置き換え用のプレースホルダー
+
+`template.html` には、変換時に置き換えられるプレースホルダーがあります。名前を変えたり削除すると、出力HTMLが壊れます。
+
+- `{{TITLE}}`：ページタイトル（`<title>` と見出し）
+- `{{SUBTITLE_BLOCK}}`：サブタイトル（`-Subtitle` が空なら空文字）
+- `{{NAV_ITEMS}}`：ページ上部のナビゲーション
+- `{{QUESTION_CARDS}}`：各問題カード（本文・採点基準・解答/解説）
+
+### 主なCSSクラス
+
+テンプレ内のCSSは、主に次のクラスを前提にしています。
+
+- `.question-card`：問題カード本体
+- `.code-block` / `.code-example`：コードブロック（出題/解答）
+- `.highlight-tip`：本文中の「本試験では」ブロック
+- `.scoring-criteria`：採点基準・配点
+- `.answer-section`：解答・解説（開閉）
+
+### テンプレートを差し替える
+
+別のテンプレートを使いたい場合は `-TemplateHtml` を指定します。
+
+```powershell
+pwsh -File .\convert-exam-md-to-html.ps1 `
+  -InputMd .\input.md `
+  -OutputHtml .\output.html `
+  -TemplateHtml .\my-template.html
+```
+
+### Prism.js（シンタックスハイライト）
+
+標準の `template.html` は Prism.js を CDN から読み込みます。オフラインで使いたい場合は、Prism.js をローカル配信に切り替えるか、`<link>`/`<script>` を削除しても動作します（ハイライトだけ無くなります）。
 
 ## セキュリティ上の注意
 
