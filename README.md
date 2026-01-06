@@ -18,11 +18,12 @@ PowerShell 標準の `ConvertFrom-Markdown` を使って、Markdown を「問題
 ```powershell
 pwsh -File .\convert-exam-md-to-html.ps1 `
   -InputMd .\examples\sample.md `
-  -OutputHtml .\dist\sample.html `
+  -OutputPath .\dist\sample.html `
   -Subtitle "サブタイトル（任意）"
 ```
 
-- `-OutputHtml` を省略すると、入力ファイルと同じ場所に拡張子 `.html` で出力します。
+- `-OutputPath` を省略すると、入力ファイルと同じ場所に拡張子 `.html` で出力します。
+  フォルダパスを指定した場合は、その中にHTMLを出力します。
 - `dist` のような出力先フォルダが無い場合は自動で作成します。
 
 ## 入力Markdownの前提（最低限）
@@ -64,7 +65,7 @@ pwsh -File .\convert-exam-md-to-html.ps1 `
 ```powershell
 pwsh -File .\convert-exam-md-to-html.ps1 `
   -InputMd .\input.md `
-  -OutputHtml .\output.html `
+  -OutputPath .\output.html `
   -TemplateHtml .\my-template.html
 ```
 
