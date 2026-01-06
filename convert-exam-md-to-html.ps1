@@ -12,8 +12,9 @@
 .PARAMETER InputMd
   入力Markdownファイルのパス。
 
-.PARAMETER OutputHtml
-  出力HTMLファイルのパス（省略すると InputMd と同名で拡張子 .html）。
+.PARAMETER OutputPath
+  出力先のパス（省略すると InputMd と同名で拡張子 .html）。
+  ファイルパスならその場所に出力し、フォルダパスなら中にHTMLを出力します。
 
 .PARAMETER Subtitle
   ヘッダー直下に表示するサブタイトル（任意）。
@@ -22,7 +23,7 @@
   HTMLテンプレートのパス（省略するとスクリプトと同じ場所の `template.html`）。
 
 .EXAMPLE
-  pwsh -File .\\convert-exam-md-to-html.ps1 -InputMd .\\examples\\sample.md -OutputHtml .\\dist\\sample.html
+  pwsh -File .\\convert-exam-md-to-html.ps1 -InputMd .\\examples\\sample.md -OutputPath .\\dist\\sample.html
 #>
 
 [CmdletBinding()]
@@ -30,7 +31,7 @@ param(
   [Parameter(Mandatory = $true)]
   [string]$InputMd,
 
-  [string]$OutputHtml,
+  [string]$OutputPath,
 
   [string]$Subtitle = "",
 
@@ -113,6 +114,24 @@ function Normalize-TipText([string]$tipText) {
   $text = $text -replace '^\s*本試験では\s*[:：]\s*', ''
 
   return $text.Trim()
+}
+function Resolve-OutputPath([string]$path, [string]$inputPath) {
+  if ([string]::IsNullOrWhiteSpace($path)) {
+    return [System.IO.Path]::ChangeExtension($inputPath, '.html')
+  }
+
+  $trimmed = $path.Trim()
+  $dirSeparator = [System.IO.Path]::DirectorySeparatorChar
+  $altSeparator = [System.IO.Path]::AltDirectorySeparatorChar
+  $looksLikeDirectory = $trimmed.EndsWith($dirSeparator) -or (($altSeparator -ne $dirSeparator) -and $trimmed.EndsWith($altSeparator))
+  $isDirectory = $looksLikeDirectory -or (Test-Path -Path $trimmed -PathType Container)
+
+  if ($isDirectory) {
+    $fileName = [System.IO.Path]::GetFileNameWithoutExtension($inputPath) + '.html'
+    return (Join-Path $trimmed $fileName)
+  }
+
+  return $trimmed
 }
 function Split-QuestionBody([string]$body) {
   $clean = Remove-HrLines $body
@@ -291,9 +310,7 @@ $answerHtml
 $inputPath = (Resolve-Path -Path $InputMd).Path
 if (-not (Test-Path -Path $inputPath)) { throw "入力ファイルが見つかりません: $InputMd" }
 
-if ([string]::IsNullOrWhiteSpace($OutputHtml)) {
-  $OutputHtml = [System.IO.Path]::ChangeExtension($inputPath, '.html')
-}
+$OutputPath = Resolve-OutputPath $OutputPath $inputPath
 
 $templatePath = if ([string]::IsNullOrWhiteSpace($TemplateHtml)) {
   Join-Path $PSScriptRoot 'template.html'
@@ -331,10 +348,10 @@ $html = $html.Replace('{{SUBTITLE_BLOCK}}', $subtitleBlock)
 $html = $html.Replace('{{NAV_ITEMS}}', $nav)
 $html = $html.Replace('{{QUESTION_CARDS}}', $cards)
 
-$outDir = Split-Path -Parent $OutputHtml
+$outDir = Split-Path -Parent $OutputPath
 if (-not [string]::IsNullOrWhiteSpace($outDir)) {
   New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 }
 
-Set-Content -Path $OutputHtml -Value $html -Encoding UTF8
-Write-Host "出力しました: $OutputHtml"
+Set-Content -Path $OutputPath -Value $html -Encoding UTF8
+Write-Host "出力しました: $OutputPath"
