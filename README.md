@@ -8,6 +8,7 @@ PowerShell 標準の `ConvertFrom-Markdown` を使って、Markdown を「問題
 - 入力はMarkdownなので修正が簡単
 - デザインは `template.html` を編集するだけで変更可能
 - `${...}` を穴埋め用の入力欄に置換可能（出力HTML内で入力欄に変換）
+- 画像（相対パス）は出力先フォルダにコピーされ、HTML内のパスも調整
 
 ## 必要なもの
 
@@ -25,6 +26,7 @@ pwsh -File .\convert-exam-md-to-html.ps1 `
 - `-OutputPath` を省略すると、入力ファイルと同じ場所に拡張子 `.html` で出力します。
   フォルダパスを指定した場合は、その中にHTMLを出力します。
 - `dist` のような出力先フォルダが無い場合は自動で作成します。
+- Markdown内の相対パス画像は、出力先フォルダに同じ相対構成でコピーされます。
 
 ## 入力Markdownの前提（最低限）
 

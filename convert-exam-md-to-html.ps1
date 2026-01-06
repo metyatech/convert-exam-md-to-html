@@ -8,6 +8,7 @@
 
   - `## 問題N：...` を問題カードとして扱います。
   - `${...}` は入力欄に置換します（出力HTML内でプレースホルダーを入力欄に変換）。
+  - ローカル画像は出力先フォルダへコピーし、出力HTMLの `img` パスを調整します。
 
 .PARAMETER InputMd
   入力Markdownファイルのパス。
@@ -114,6 +115,85 @@ function Normalize-TipText([string]$tipText) {
   $text = $text -replace '^\s*本試験では\s*[:：]\s*', ''
 
   return $text.Trim()
+}
+function Resolve-ImageSrc([string]$src, [string]$inputDir, [string]$outputDir) {
+  $result = [pscustomobject]@{
+    NewSrc     = $src
+    SourcePath = $null
+    DestPath   = $null
+    ShouldCopy = $false
+  }
+
+  if ([string]::IsNullOrWhiteSpace($src)) { return $result }
+  if ($src -match '^(?:[a-zA-Z][a-zA-Z0-9+.-]*:|//)') { return $result }
+  if ($src.StartsWith('#')) { return $result }
+  if ([System.IO.Path]::IsPathRooted($src)) { return $result }
+
+  $pathPart = $src
+  $query = ''
+  $fragment = ''
+  $match = [regex]::Match($src, '^([^?#]*)(\?[^#]*)?(#.*)?$')
+  if ($match.Success) {
+    $pathPart = $match.Groups[1].Value
+    $query = $match.Groups[2].Value
+    $fragment = $match.Groups[3].Value
+  }
+
+  if ([string]::IsNullOrWhiteSpace($pathPart)) { return $result }
+
+  try {
+    $absolute = [System.IO.Path]::GetFullPath((Join-Path $inputDir $pathPart))
+  }
+  catch {
+    return $result
+  }
+
+  $relative = [System.IO.Path]::GetRelativePath($inputDir, $absolute)
+  if ([string]::IsNullOrWhiteSpace($relative) -or $relative.StartsWith('..') -or [System.IO.Path]::IsPathRooted($relative)) {
+    $relative = [System.IO.Path]::GetFileName($absolute)
+  }
+
+  $destPath = [System.IO.Path]::GetFullPath((Join-Path $outputDir $relative))
+  $newSrc = ($relative -replace '\\', '/') + $query + $fragment
+
+  $result.NewSrc = $newSrc
+  $result.SourcePath = $absolute
+  $result.DestPath = $destPath
+  $result.ShouldCopy = $true
+  return $result
+}
+function Fix-ImagePaths([string]$html, [string]$inputPath, [string]$outputPath) {
+  if ([string]::IsNullOrWhiteSpace($html)) { return $html }
+
+  $inputDir = Split-Path -Parent $inputPath
+  $outputDir = Split-Path -Parent $outputPath
+  if ([string]::IsNullOrWhiteSpace($inputDir) -or [string]::IsNullOrWhiteSpace($outputDir)) { return $html }
+
+  $copied = @{}
+  $pattern = '(?i)(<img\b[^>]*\s+src\s*=\s*)(["''])([^"''>]+)(\2)'
+  return [regex]::Replace($html, $pattern, {
+      param($m)
+      $prefix = $m.Groups[1].Value
+      $quote = $m.Groups[2].Value
+      $src = $m.Groups[3].Value
+      $info = Resolve-ImageSrc $src $inputDir $outputDir
+
+      if ($info.ShouldCopy -and -not [string]::IsNullOrWhiteSpace($info.SourcePath) -and -not [string]::IsNullOrWhiteSpace($info.DestPath)) {
+        if (-not (Test-Path -LiteralPath $info.SourcePath)) {
+          Write-Warning "画像が見つかりません: $($info.SourcePath)"
+        }
+        elseif ($info.SourcePath -ne $info.DestPath -and -not $copied.ContainsKey($info.DestPath)) {
+          $destDir = Split-Path -Parent $info.DestPath
+          if (-not [string]::IsNullOrWhiteSpace($destDir)) {
+            New-Item -ItemType Directory -Force -Path $destDir | Out-Null
+          }
+          Copy-Item -LiteralPath $info.SourcePath -Destination $info.DestPath -Force
+          $copied[$info.DestPath] = $true
+        }
+      }
+
+      return $prefix + $quote + $info.NewSrc + $quote
+    })
 }
 function Resolve-OutputPath([string]$path, [string]$inputPath) {
   if ([string]::IsNullOrWhiteSpace($path)) {
@@ -311,6 +391,7 @@ $inputPath = (Resolve-Path -Path $InputMd).Path
 if (-not (Test-Path -Path $inputPath)) { throw "入力ファイルが見つかりません: $InputMd" }
 
 $OutputPath = Resolve-OutputPath $OutputPath $inputPath
+$OutputPath = [System.IO.Path]::GetFullPath($OutputPath)
 
 $templatePath = if ([string]::IsNullOrWhiteSpace($TemplateHtml)) {
   Join-Path $PSScriptRoot 'template.html'
@@ -347,6 +428,7 @@ $html = $template.Replace('{{TITLE}}', (Escape-Html $title))
 $html = $html.Replace('{{SUBTITLE_BLOCK}}', $subtitleBlock)
 $html = $html.Replace('{{NAV_ITEMS}}', $nav)
 $html = $html.Replace('{{QUESTION_CARDS}}', $cards)
+$html = Fix-ImagePaths $html $inputPath $OutputPath
 
 $outDir = Split-Path -Parent $OutputPath
 if (-not [string]::IsNullOrWhiteSpace($outDir)) {
