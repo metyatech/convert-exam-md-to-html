@@ -15,7 +15,7 @@ jobs:
         run: |
           pwsh -File ./convert-exam-md-to-html.ps1 `
             -InputMd ./examples/sample.md `
-            -OutputHtml ./dist/sample.html `
+            -OutputPath ./dist/sample.html `
             -Subtitle "CI"
 
       - name: Smoke test output
