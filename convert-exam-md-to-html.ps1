@@ -242,7 +242,11 @@ function Build-QuestionCards($questions) {
 
     $tipHtml = ''
     if (-not [string]::IsNullOrWhiteSpace($parts.Tip)) {
-      $tipHtml = ('<div class="highlight-tip"><h4>本試験では</h4><p>{0}</p></div>' -f (Escape-HtmlText $parts.Tip))
+      $tipInnerHtml = Convert-MdToHtml $parts.Tip
+      $tipInnerHtml = Normalize-CodeLanguages $tipInnerHtml
+      $tipInnerHtml = Wrap-CodeBlocks $tipInnerHtml 'code-block'
+      $tipInnerHtml = Replace-Blanks $tipInnerHtml
+      $tipHtml = ('<div class="highlight-tip"><h4>本試験では</h4>{0}</div>' -f $tipInnerHtml)
     }
 
     $scoringListHtml = Convert-MdToHtml $parts.ScoringBody
